@@ -1,0 +1,16 @@
+# -*- mode: cmake; -*-
+
+find_package(PkgConfig REQUIRED)
+
+# find Qt
+find_package(Qt5 COMPONENTS Widgets DataVisualization REQUIRED)
+
+# find Qscintilla2
+find_package(QScintilla REQUIRED)
+add_library(qscintilla INTERFACE)
+target_include_directories(qscintilla INTERFACE "${QSCINTILLA_INCLUDE_DIR}")
+target_link_libraries(qscintilla INTERFACE ${QSCINTILLA_LIBRARIES})
+add_library(sys::qscintilla ALIAS qscintilla)
+
+# find Octave interpreter
+pkg_check_modules(octinterp "octinterp" REQUIRED IMPORTED_TARGET)
