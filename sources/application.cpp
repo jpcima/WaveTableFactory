@@ -187,9 +187,9 @@ bool Application::init()
 
     series->setItemLabelFormat(QStringLiteral("@xTitle=@xLabel @zTitle=@zLabel @yTitle=@yLabel"));
 
-    wavePlot3D->axisX()->setTitle("Y");
+    wavePlot3D->axisX()->setTitle("X");
     wavePlot3D->axisY()->setTitle("Wave");
-    wavePlot3D->axisZ()->setTitle("X");
+    wavePlot3D->axisZ()->setTitle("Y");
     wavePlot3D->axisX()->setTitleVisible(true);
     wavePlot3D->axisY()->setTitleVisible(true);
     wavePlot3D->axisZ()->setTitleVisible(true);
@@ -289,7 +289,7 @@ void Application::Impl::onWavetableUpdated()
             double w = double(w_i) / double(w_n - 1);
             double f = double(f_i) / double(f_n);
             double value = wt.data[w_i * f_n + f_i];
-            ptrToDataArray->setPosition(QVector3D(w, value, f));
+            ptrToDataArray->setPosition(QVector3D(f, value, w));
             ++ptrToDataArray;
         }
     }
