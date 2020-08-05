@@ -3,7 +3,7 @@
 #include "wave_processor.h"
 #include "wavetable.h"
 #include <Qsci/qscilexermatlab.h>
-#include <Q3DScatter>
+#include <Q3DSurface>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QMenu>
@@ -26,7 +26,7 @@ class SliderAction;
 struct Application::Impl {
     std::unique_ptr<WaveProcessor> waveProc_;
     Wavetable_s waveTable_;
-    Q3DScatter *wavePlot3D_ = nullptr;
+    Q3DSurface *wavePlot3D_ = nullptr;
 
     ///
     QTimer *runCodeTimer_ = nullptr;
@@ -168,9 +168,11 @@ bool Application::init()
     settingsMenu->addAction(actionSetNumTables);
 
     ///
-    Q3DScatter *wavePlot3D = new Q3DScatter;
+    Q3DSurface *wavePlot3D = new Q3DSurface;
     impl->wavePlot3D_ = wavePlot3D;
     ui->frmPlot->layout()->addWidget(QWidget::createWindowContainer(wavePlot3D));
+
+    wavePlot3D->setShadowQuality(QAbstract3DGraph::ShadowQualityNone);
 
     Q3DTheme *waveTheme3D = wavePlot3D->activeTheme();
     {   QFont font = waveTheme3D->font();
@@ -181,8 +183,8 @@ bool Application::init()
     Q3DScene *scene3D = wavePlot3D->scene();
     scene3D->activeCamera()->setCameraPreset(Q3DCamera::CameraPresetIsometricLeft);
 
-    QScatterDataProxy *proxy = new QScatterDataProxy;
-    QScatter3DSeries *series = new QScatter3DSeries(proxy);
+    QSurfaceDataProxy *proxy = new QSurfaceDataProxy;
+    QSurface3DSeries *series = new QSurface3DSeries(proxy);
     wavePlot3D->addSeries(series);
 
     series->setItemLabelFormat(QStringLiteral("@xTitle=@xLabel @zTitle=@zLabel @yTitle=@yLabel"));
@@ -276,22 +278,23 @@ void Application::Impl::onWavetableUpdated()
     unsigned w_step = std::max(1u, wt.count / axisMaxPoints);
     unsigned f_step = std::max(1u, wt.frames / axisMaxPoints);
 
-    Q3DScatter *plt = wavePlot3D_;
-    QScatter3DSeries *series = plt->seriesList().at(0);
-    QScatterDataProxy *proxy = series->dataProxy();
+    Q3DSurface *plt = wavePlot3D_;
+    QSurface3DSeries *series = plt->seriesList().at(0);
+    QSurfaceDataProxy *proxy = series->dataProxy();
 
-    QScatterDataArray *dataArray = new QScatterDataArray;
-    dataArray->resize((wt.count / w_step) * (wt.frames / f_step));
-    QScatterDataItem *ptrToDataArray = &dataArray->first();
+    QSurfaceDataArray *dataArray = new QSurfaceDataArray;
+    dataArray->reserve(wt.count / w_step);
 
     for (unsigned w_i = 0, w_n = wt.count; w_i < w_n; w_i += w_step) {
+        QSurfaceDataRow *newRow = new QSurfaceDataRow(wt.frames / f_step);
+        int index = 0;
         for (unsigned f_i = 0, f_n = wt.frames; f_i < f_n; f_i += f_step) {
             double w = double(w_i) / double(w_n - 1);
             double f = double(f_i) / double(f_n);
             double value = wt.data[w_i * f_n + f_i];
-            ptrToDataArray->setPosition(QVector3D(f, value, w));
-            ++ptrToDataArray;
+            (*newRow)[index++].setPosition(QVector3D(f, value, w));
         }
+        *dataArray << newRow;
     }
 
     proxy->resetArray(dataArray);
