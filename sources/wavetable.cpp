@@ -86,6 +86,8 @@ void Wavetables::saveToWAVFile(QFile &stream, const Wavetable &wt, const QString
         //
         writeLE32(stream, data.size());
         stream.write(data.data(), data.size());
+        if (data.size() & 1)
+            stream.putChar('\0');
     }
 
     // code chunk
@@ -96,6 +98,8 @@ void Wavetables::saveToWAVFile(QFile &stream, const Wavetable &wt, const QString
             data.push_back('\0');
         writeLE32(stream, data.size());
         stream.write(data.data(), data.size());
+        if (data.size() & 1)
+            stream.putChar('\0');
     }
 
     qint64 riffEnd = stream.pos();
